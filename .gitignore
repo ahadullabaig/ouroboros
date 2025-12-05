@@ -26,3 +26,6 @@ vgcore.*
 # Memory profiler outputs
 massif.out.*
 callgrind.out.*
+
+#CLI Agent inits
+CLAUDE.md
