@@ -1,0 +1,28 @@
+# Build artifacts
+bin/
+obj/
+*.o
+*.out
+*.exe
+
+# Debugging symbols
+*.dSYM/
+
+# Editor temporary files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Core dumps
+core
+vgcore.*
+
+# Memory profiler outputs
+massif.out.*
+callgrind.out.*
