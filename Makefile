@@ -14,6 +14,7 @@ SRCS = $(SRC_DIR)/main.c \
        $(SRC_DIR)/game/game_state.c \
        $(SRC_DIR)/ai/ai_controller.c \
        $(SRC_DIR)/ai/pathfinding.c \
+       $(SRC_DIR)/ai/safety_checker.c \
        $(SRC_DIR)/data_structures/snake.c \
        $(SRC_DIR)/data_structures/queue.c \
        $(SRC_DIR)/data_structures/grid.c \
@@ -27,6 +28,7 @@ OBJS = $(OBJ_DIR)/main.o \
        $(OBJ_DIR)/game/game_state.o \
        $(OBJ_DIR)/ai/ai_controller.o \
        $(OBJ_DIR)/ai/pathfinding.o \
+       $(OBJ_DIR)/ai/safety_checker.o \
        $(OBJ_DIR)/data_structures/snake.o \
        $(OBJ_DIR)/data_structures/queue.o \
        $(OBJ_DIR)/data_structures/grid.o \

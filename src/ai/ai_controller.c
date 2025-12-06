@@ -1,5 +1,6 @@
 #include "ai_controller.h"
 #include "pathfinding.h"
+#include "safety_checker.h"
 #include "../utils/timer.h"
 #include "../utils/memory_tracker.h"
 #include <stdlib.h>
@@ -17,7 +18,7 @@ AIDecision* ai_make_decision(GameState* state) {
 
     decision->chosen_direction = DIR_NONE;
     decision->path_to_food = NULL;
-    decision->safety_check = NULL;  /* Phase 3: No safety check yet */
+    decision->safety_check = NULL;
     decision->total_compute_time_us = 0;
     decision->used_fallback = false;
 
@@ -39,7 +40,21 @@ AIDecision* ai_make_decision(GameState* state) {
         /* Path found - get next direction */
         /* path[0] is current position, path[1] is next position */
         Position next_pos = decision->path_to_food->positions[1];
-        decision->chosen_direction = pathfinding_get_next_direction(head_pos, next_pos);
+        Direction next_dir = pathfinding_get_next_direction(head_pos, next_pos);
+
+        /* Phase 4: Validate safety before committing to this move */
+        decision->safety_check = safety_check_move(&state->grid, state->snake, next_dir, food_pos);
+
+        if (decision->safety_check && decision->safety_check->is_safe) {
+            /* Safe to follow path to food */
+            decision->chosen_direction = next_dir;
+            decision->used_fallback = false;
+        } else {
+            /* Path exists but it's unsafe - would self-trap! */
+            /* Use fallback strategy instead */
+            decision->chosen_direction = ai_fallback_strategy(state);
+            decision->used_fallback = true;
+        }
     } else {
         /* No path to food - use fallback strategy (chase tail) */
         decision->chosen_direction = ai_fallback_strategy(state);
@@ -65,7 +80,10 @@ void ai_decision_destroy(AIDecision* decision) {
         pathfinding_free_result(decision->path_to_food);
     }
 
-    /* safety_check will be freed in Phase 4 */
+    /* Phase 4: Clean up safety check result */
+    if (decision->safety_check) {
+        safety_result_destroy(decision->safety_check);
+    }
 
     memory_tracked_free(decision);
 }

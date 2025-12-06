@@ -4,9 +4,7 @@
 #include "../../include/common.h"
 #include "../game/game_state.h"
 #include "pathfinding.h"
-
-/* Forward declaration for safety checker (Phase 4) */
-typedef struct SafetyResult SafetyResult;
+#include "safety_checker.h"
 
 /**
  * AI decision structure
@@ -15,15 +13,15 @@ typedef struct SafetyResult SafetyResult;
 typedef struct {
     Direction chosen_direction;
     PathResult* path_to_food;
-    SafetyResult* safety_check;  /* Will be NULL in Phase 3 */
+    SafetyResult* safety_check;  /* Phase 4: Safety validation result */
     uint64_t total_compute_time_us;
     bool used_fallback;          /* If greedy path failed, used tail-chasing */
 } AIDecision;
 
 /**
  * Make an AI decision for the current game state
- * Phase 3: Uses BFS only (greedy, may trap itself)
- * Phase 4: Will add safety checking
+ * Phase 4: Uses BFS + safety validation for perfect play
+ * Only follows paths that guarantee escape routes exist
  * @param state Current game state
  * @return AIDecision (must be freed with ai_decision_destroy)
  */

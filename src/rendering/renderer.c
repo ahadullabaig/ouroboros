@@ -174,8 +174,6 @@ void renderer_draw_stats(Renderer* renderer, const GameState* state, const AIDec
         return;
     }
 
-    (void)ai_decision;  /* Unused in Phase 2 */
-
     WINDOW* win = renderer->stats_window;
     werase(win);
 
@@ -208,6 +206,67 @@ void renderer_draw_stats(Renderer* renderer, const GameState* state, const AIDec
     line++;
     ui_draw_separator(win, line++);
     line++;
+
+    /* AI Statistics (Phase 4) */
+    if (state->mode == MODE_AI_DEMO && ai_decision) {
+        wattron(win, A_BOLD);
+        mvwprintw(win, line++, 2, "AI Statistics:");
+        wattroff(win, A_BOLD);
+
+        /* BFS compute time */
+        if (ai_decision->path_to_food) {
+            char bfs_time_buf[32];
+            snprintf(bfs_time_buf, sizeof(bfs_time_buf), "%.2f ms",
+                     ai_decision->path_to_food->compute_time_us / 1000.0);
+            ui_draw_stat_line(win, line++, "BFS Time", bfs_time_buf);
+        }
+
+        /* Safety check status */
+        if (ai_decision->safety_check) {
+            const char* safety_status = ai_decision->safety_check->is_safe ? "SAFE" : "UNSAFE";
+            int color_pair = ai_decision->safety_check->is_safe ? COLOR_PAIR_SNAKE_BODY : COLOR_PAIR_FOOD;
+
+            mvwprintw(win, line, 2, "Safety: ");
+            wattron(win, COLOR_PAIR(color_pair) | A_BOLD);
+            wprintw(win, "%s", safety_status);
+            wattroff(win, COLOR_PAIR(color_pair) | A_BOLD);
+            line++;
+
+            /* Safety check compute time */
+            char safety_time_buf[32];
+            snprintf(safety_time_buf, sizeof(safety_time_buf), "%.2f ms",
+                     ai_decision->safety_check->compute_time_us / 1000.0);
+            ui_draw_stat_line(win, line++, "Safety Time", safety_time_buf);
+
+            /* Escape path length */
+            if (ai_decision->safety_check->escape_path &&
+                ai_decision->safety_check->escape_path->found) {
+                char escape_buf[32];
+                snprintf(escape_buf, sizeof(escape_buf), "%zu steps",
+                         ai_decision->safety_check->escape_path->length);
+                ui_draw_stat_line(win, line++, "Escape Path", escape_buf);
+            }
+        } else {
+            ui_draw_stat_line(win, line++, "Safety", "N/A");
+        }
+
+        /* Total AI compute time */
+        char total_time_buf[32];
+        snprintf(total_time_buf, sizeof(total_time_buf), "%.2f ms",
+                 ai_decision->total_compute_time_us / 1000.0);
+        ui_draw_stat_line(win, line++, "Total Time", total_time_buf);
+
+        /* Fallback indicator */
+        if (ai_decision->used_fallback) {
+            wattron(win, COLOR_PAIR(COLOR_PAIR_PATH_OVERLAY) | A_BOLD);
+            mvwprintw(win, line++, 2, "  [Using Fallback]");
+            wattroff(win, COLOR_PAIR(COLOR_PAIR_PATH_OVERLAY) | A_BOLD);
+        }
+
+        line++;
+        ui_draw_separator(win, line++);
+        line++;
+    }
 
     /* Memory stats */
     char mem_buf[32];
