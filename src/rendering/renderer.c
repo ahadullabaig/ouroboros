@@ -207,11 +207,26 @@ void renderer_draw_stats(Renderer* renderer, const GameState* state, const AIDec
     ui_draw_separator(win, line++);
     line++;
 
-    /* AI Statistics (Phase 4) */
+    /* AI Statistics (Phase 5) */
     if (state->mode == MODE_AI_DEMO && ai_decision) {
         wattron(win, A_BOLD);
         mvwprintw(win, line++, 2, "AI Statistics:");
         wattroff(win, A_BOLD);
+
+        /* Phase 5: Space Analysis */
+        if (ai_decision->space_analysis && ai_decision->space_analysis->is_valid) {
+            char space_buf[32];
+            snprintf(space_buf, sizeof(space_buf), "%zu cells",
+                     ai_decision->space_analysis->accessible_cells);
+            ui_draw_stat_line(win, line++, "Access Space", space_buf);
+
+            /* Space as percentage of grid */
+            size_t grid_size = GRID_WIDTH * GRID_HEIGHT;
+            float space_percent = (float)ai_decision->space_analysis->accessible_cells / grid_size * 100.0f;
+            char space_pct_buf[32];
+            snprintf(space_pct_buf, sizeof(space_pct_buf), "%.1f%%", space_percent);
+            ui_draw_stat_line(win, line++, "Space %", space_pct_buf);
+        }
 
         /* BFS compute time */
         if (ai_decision->path_to_food) {
@@ -256,10 +271,14 @@ void renderer_draw_stats(Renderer* renderer, const GameState* state, const AIDec
                  ai_decision->total_compute_time_us / 1000.0);
         ui_draw_stat_line(win, line++, "Total Time", total_time_buf);
 
-        /* Fallback indicator */
-        if (ai_decision->used_fallback) {
+        /* Strategy indicators */
+        if (ai_decision->used_space_strategy && !ai_decision->used_fallback) {
+            wattron(win, COLOR_PAIR(COLOR_PAIR_SNAKE_BODY) | A_BOLD);
+            mvwprintw(win, line++, 2, "  [Space Strategy]");
+            wattroff(win, COLOR_PAIR(COLOR_PAIR_SNAKE_BODY) | A_BOLD);
+        } else if (ai_decision->used_fallback) {
             wattron(win, COLOR_PAIR(COLOR_PAIR_PATH_OVERLAY) | A_BOLD);
-            mvwprintw(win, line++, 2, "  [Using Fallback]");
+            mvwprintw(win, line++, 2, "  [Fallback Mode]");
             wattroff(win, COLOR_PAIR(COLOR_PAIR_PATH_OVERLAY) | A_BOLD);
         }
 
